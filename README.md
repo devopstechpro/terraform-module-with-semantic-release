@@ -2,40 +2,72 @@
 
 This repository contains reusable Terraform modules designed for managing bucket resources on GCP. This project shows how you can configure semantic versioning for such module.
 
-## Requirements
+## Step-by-setup semantic versioning on a repo:
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.10.1 |
+1. Create `.github/workflows/pipeline.yml` file
+   ```
+   name: Release
+   on:
+     push:
+       branches:
+         - main
+         - feat/add_tf_module_with_semvar
 
-## Providers
+   permissions:
+     contents: read # for checkout
 
-| Name | Version |
-|------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | 6.16.0 |
+   jobs:
+     release:
+       name: Release
+       runs-on: ubuntu-latest
+       permissions:
+         contents: write # to be able to publish a GitHub release
+         issues: write # to be able to comment on released issues
+         pull-requests: write # to be able to comment on released pull requests
+         id-token: write # to enable use of OIDC for npm provenance
+       steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+           with:
+             fetch-depth: 0
+             persist-credentials: false
+         - name: Semantic Release
+           id: semantic-release
+           uses: cycjimmy/semantic-release-action@v4
+           env:
+             GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+   ```
+2. Create `.releaserc` file at root location
+    ```
+      {
+          "plugins": [
+              "@semantic-release/commit-analyzer",
+              "@semantic-release/release-notes-generator",
+              [
+                  "@semantic-release/changelog",
+                  {
+                      "changelogFile": "CHANGELOG.md"
+                  }
+              ],
+              [
+                  "@semantic-release/git",
+                  {
+                      "assets": [
+                          "CHANGELOG.md"
+                      ]
+                  }
+              ],
+              "@semantic-release/github"
 
-## Modules
+          ]
+      }
+    ```
+3. You will need a [Github Personal Access Token](https://github.com/settings/personal-access-tokens/new) and store it as environment variable via `Settings > CI/CD > Actions variables > Secret`
 
-No modules.
+4. Make and pull request and merge to Main or Master branch this will automatically publish a semantic release version tag for the commit.
 
-## Resources
 
-| Name | Type |
-|------|------|
-| [google_storage_bucket.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket) | resource |
-| [google_storage_bucket_iam_binding.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_iam_binding) | resource |
+## References
 
-## Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Name of the bucket | `string` | n/a | yes |
-| <a name="input_iam_binding"></a> [iam\_binding](#input\_iam\_binding) | IAM bindings for the bucket | <pre>list(object({<br>    role_name    = string<br>    members_name = list(string)<br>  }))</pre> | `[]` | no |
-| <a name="input_labels"></a> [labels](#input\_labels) | Default labels for the bucket | `map(string)` | `{}` | no |
-| <a name="input_lifecycle_rule"></a> [lifecycle\_rule](#input\_lifecycle\_rule) | Optional lifecycle rules for the bucket | <pre>list(object({<br>    action_type   = string<br>    condition_age = number<br>  }))</pre> | `null` | no |
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| <a name="output_name"></a> [name](#output\_name) | Name of the bucket |
+1. [Semantic Versioning official documentation](https://semantic-release.gitbook.io/semantic-release)
+2. [Semantic versioning on Github](https://github.com/marketplace/actions/action-for-semantic-release)
