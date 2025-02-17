@@ -23,8 +23,12 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Set Release Date
+        run: echo "RELEASE_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
       - name: Semantic Release
         id: semantic-release
         uses: cycjimmy/semantic-release-action@v4
+        with:
+          tag_format: v${version}-${{ env.RELEASE_DATE }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
