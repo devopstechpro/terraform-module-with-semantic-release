@@ -1,6 +1,6 @@
 {
     "branches": ["main"],
-    "tagFormat": "${version}-${date}",
+    "tagFormat": "${version}-${env:RELEASE_DATE}",
     "plugins": [
         "@semantic-release/commit-analyzer",
         "@semantic-release/release-notes-generator",
